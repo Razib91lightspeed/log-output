@@ -1,10 +1,11 @@
 import fs from "fs";
-import crypto from "crypto";
 
-const random = crypto.randomUUID();
-const file = "/usr/src/app/shared/log.txt";
+const RANDOM_FILE = "/usr/src/app/shared/random.txt";
+
+if (!fs.existsSync(RANDOM_FILE)) {
+  fs.writeFileSync(RANDOM_FILE, crypto.randomUUID());
+}
 
 setInterval(() => {
-  const line = `${new Date().toISOString()}: ${random}\n`;
-  fs.appendFileSync(file, line);
+  // nothing else required
 }, 5000);

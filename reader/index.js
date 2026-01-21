@@ -1,14 +1,26 @@
-import fs from "fs";
-import http from "http";
+const express = require("express");
+const fs = require("fs");
 
-const file = "/usr/src/app/shared/log.txt";
-const port = 3000;
+const app = express();
 
-http.createServer((req, res) => {
-  res.writeHead(200, { "Content-Type": "text/plain" });
-  if (fs.existsSync(file)) {
-    res.end(fs.readFileSync(file, "utf-8"));
-  } else {
-    res.end("No logs yet");
+const LOG_FILE = "/usr/src/app/shared/log.txt";
+const PING_FILE = "/usr/src/app/shared/pingpong.txt";
+
+app.get("/", (_req, res) => {
+  let logs = "";
+  let pingCount = 0;
+
+  if (fs.existsSync(LOG_FILE)) {
+    logs = fs.readFileSync(LOG_FILE, "utf8");
   }
-}).listen(port);
+
+  if (fs.existsSync(PING_FILE)) {
+    pingCount = fs.readFileSync(PING_FILE, "utf8").trim();
+  }
+
+  res.send(`${logs}\nPing / Pongs: ${pingCount}`);
+});
+
+app.listen(3000, () => {
+  console.log("Log reader running on port 3000");
+});
