@@ -12,9 +12,19 @@ spec:
       labels:
         app: log-output
     spec:
+      volumes:
+        - name: shared-logs
+          emptyDir: {}
       containers:
-        - name: log-output
-          image: razibhasan2/log-output:1.2.0
-          env:
-            - name: PORT
-              value: "3000"
+        - name: writer
+          image: razibhasan2/log-writer:1.0.0
+          volumeMounts:
+            - name: shared-logs
+              mountPath: /usr/src/app/shared
+        - name: reader
+          image: razibhasan2/log-reader:1.0.0
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: shared-logs
+              mountPath: /usr/src/app/shared
