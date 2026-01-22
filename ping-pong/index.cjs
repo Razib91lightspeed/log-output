@@ -3,11 +3,13 @@ const app = express()
 
 let pongs = 0
 
+
 // Browser / ping endpoint
 app.get('/pingpong', (req, res) => {
   pongs++
   res.send(`Pongs: ${pongs}`)
 })
+
 
 // INTERNAL endpoint for log-output
 app.get('/pings', (req, res) => {
