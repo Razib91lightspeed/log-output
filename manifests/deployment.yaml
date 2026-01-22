@@ -13,20 +13,21 @@ spec:
         app: log-output
     spec:
       volumes:
-        - name: shared-logs
+        - name: shared-storage
           persistentVolumeClaim:
             claimName: shared-pvc
+
       containers:
         - name: writer
           image: razibhasan2/log-writer:1.0.0
           volumeMounts:
-            - name: shared-logs
+            - name: shared-storage
               mountPath: /usr/src/app/shared
 
         - name: reader
-          image: razibhasan2/log-reader:1.0.0
+          image: razibhasan2/log-reader:1.14
           ports:
             - containerPort: 3000
           volumeMounts:
-            - name: shared-logs
+            - name: shared-storage
               mountPath: /usr/src/app/shared
