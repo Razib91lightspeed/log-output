@@ -1,18 +1,19 @@
-const express = require("express");
-const fs = require("fs");
+const express = require('express')
+const app = express()
 
-const app = express();
-const FILE = "/usr/src/app/shared/pingpong.txt";
+let pongs = 0
 
-let count = 0;
-if (fs.existsSync(FILE)) {
-  count = parseInt(fs.readFileSync(FILE, "utf8")) || 0;
-}
+// Browser / ping endpoint
+app.get('/pingpong', (req, res) => {
+  pongs++
+  res.send(`Pongs: ${pongs}`)
+})
 
-app.get("/pingpong", (_req, res) => {
-  count += 1;
-  fs.writeFileSync(FILE, count.toString());
-  res.send(`pong ${count - 1}`);
-});
+// INTERNAL endpoint for log-output
+app.get('/pings', (req, res) => {
+  res.send(`${pongs}`)
+})
 
-app.listen(3000);
+app.listen(3000, () => {
+  console.log('Ping-pong running on port 3000')
+})
