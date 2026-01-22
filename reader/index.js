@@ -3,6 +3,9 @@ import express from "express";
 
 const app = express();
 
+/* -------------------- */
+/* Shared volume config */
+/* -------------------- */
 
 const SHARED_DIR = "/usr/src/app/shared";
 const IMAGE_PATH = `${SHARED_DIR}/image.jpg`;
@@ -10,10 +13,14 @@ const META_PATH = `${SHARED_DIR}/image.json`;
 
 const TEN_MIN = 10 * 60 * 1000;
 
-// Make sure directory exists
+/* Ensure shared directory exists */
 if (!fs.existsSync(SHARED_DIR)) {
   fs.mkdirSync(SHARED_DIR, { recursive: true });
 }
+
+/* -------------------- */
+/* Image cache logic    */
+/* -------------------- */
 
 async function downloadImage() {
   console.log("Downloading new image...");
@@ -38,12 +45,61 @@ async function ensureImage() {
   }
 }
 
+/* -------------------- */
+/* Routes               */
+/* -------------------- */
+
 app.get("/", async (_req, res) => {
   await ensureImage();
+
   res.send(`
-    <h1>The project App</h1>
-    <img src="/image" width="600"/>
-    <p>DevOps with Kubernetes 2025</p>
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>The project App</title>
+        <style>
+          body {
+            font-family: serif;
+            margin: 40px;
+          }
+          img {
+            max-width: 600px;
+            display: block;
+            margin-bottom: 20px;
+          }
+          input {
+            width: 300px;
+            padding: 6px;
+            margin-right: 10px;
+          }
+          button {
+            padding: 6px 12px;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>The project App</h1>
+
+        <img src="/image" />
+
+        <div>
+          <input
+            type="text"
+            maxlength="140"
+            placeholder="Write a todo (max 140 chars)"
+          />
+          <button>Create todo</button>
+        </div>
+
+        <ul>
+          <li>Learn JavaScript</li>
+          <li>Learn React</li>
+          <li>Build a project</li>
+        </ul>
+
+        <p>DevOps with Kubernetes 2025</p>
+      </body>
+    </html>
   `);
 });
 
