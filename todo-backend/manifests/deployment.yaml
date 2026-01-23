@@ -15,5 +15,6 @@ spec:
       containers:
         - name: todo-backend
           image: razibhasan2/todo-backend:1.0
-          ports:
-            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: todo-backend-config
