@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: todo-backend
-          image: razibhasan2/todo-backend:2.8
+          image: razibhasan2/todo-backend:2.10
           imagePullPolicy: Always
 
           ports:

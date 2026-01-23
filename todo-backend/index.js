@@ -3,6 +3,10 @@ const { Pool } = require("pg");
 
 const app = express();
 app.use(express.json());
+app.use((req, res, next) => {
+    console.log(`[REQUEST] ${req.method} ${req.path}`);
+    next();
+});
 
 const PORT = process.env.PORT;
 
@@ -45,11 +49,29 @@ app.get("/todos", async (req, res) => {
 
 app.post("/todos", async (req, res) => {
     const { content } = req.body;
-    if (!content) return res.status(400).send("Missing content");
 
-    await pool.query("INSERT INTO todos (content) VALUES ($1)", [content]);
+    if (!content) {
+        console.log("[REJECTED] Missing content");
+        return res.status(400).send("Missing content");
+    }
+
+    if (content.length > 140) {
+        console.log(
+            `[REJECTED] Todo too long (${content.length} chars): "${content}"`
+        );
+        return res.status(400).send("Todo must be at most 140 characters");
+    }
+
+    console.log(`[ACCEPTED] Todo created: "${content}"`);
+
+    await pool.query(
+        "INSERT INTO todos (content) VALUES ($1)",
+        [content]
+    );
+
     res.status(201).json({ status: "ok" });
 });
+
 
 app.listen(PORT, () => {
     console.log(`todo-backend running on port ${PORT}`);
