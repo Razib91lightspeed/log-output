@@ -1,9 +1,18 @@
 import fs from "fs";
 import express from "express";
 
-
 const app = express();
 
+// ----- ConfigMap values -----
+const MESSAGE = process.env.MESSAGE;
+const FILE_PATH = "/config/information.txt";
+
+let fileContent = "file not found";
+if (fs.existsSync(FILE_PATH)) {
+  fileContent = fs.readFileSync(FILE_PATH, "utf-8").trim();
+}
+
+// ----- Existing shared storage -----
 const SHARED_DIR = "/usr/src/app/shared";
 const IMAGE_PATH = `${SHARED_DIR}/image.jpg`;
 const META_PATH = `${SHARED_DIR}/image.json`;
@@ -13,6 +22,10 @@ const TEN_MIN = 10 * 60 * 1000;
 if (!fs.existsSync(SHARED_DIR)) {
   fs.mkdirSync(SHARED_DIR, { recursive: true });
 }
+
+// ----- Print required output (Exercise 2.5) -----
+console.log(`file content: ${fileContent}`);
+console.log(`env variable: MESSAGE=${MESSAGE}`);
 
 async function downloadImage() {
   try {
@@ -48,13 +61,6 @@ app.get("/", async (_req, res) => {
   res.send(`
     <h1>The project App</h1>
     <img src="/image" width="600"/>
-    <input maxlength="140" placeholder="Write a todo" />
-    <button>Create todo</button>
-    <ul>
-      <li>Learn JavaScript</li>
-      <li>Learn React</li>
-      <li>Build a project</li>
-    </ul>
     <p>DevOps with Kubernetes 2025</p>
   `);
 });
@@ -63,10 +69,8 @@ app.get("/image", (_req, res) => {
   if (!fs.existsSync(IMAGE_PATH)) {
     return res.status(404).send("Image not ready yet");
   }
-
   res.sendFile(IMAGE_PATH);
 });
-
 
 app.listen(3000, () => {
   console.log("Reader running on port 3000");
