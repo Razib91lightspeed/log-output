@@ -1,6 +1,7 @@
 import fs from "fs";
 import express from "express";
 
+
 const app = express();
 
 const SHARED_DIR = "/usr/src/app/shared";
@@ -59,8 +60,13 @@ app.get("/", async (_req, res) => {
 });
 
 app.get("/image", (_req, res) => {
+  if (!fs.existsSync(IMAGE_PATH)) {
+    return res.status(404).send("Image not ready yet");
+  }
+
   res.sendFile(IMAGE_PATH);
 });
+
 
 app.listen(3000, () => {
   console.log("Reader running on port 3000");
