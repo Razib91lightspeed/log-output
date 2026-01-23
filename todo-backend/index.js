@@ -1,31 +1,56 @@
-const express = require('express')
-const app = express()
+const express = require("express");
+const { Pool } = require("pg");
 
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+const app = express();
+app.use(express.json());
 
-const todos = [
-    { content: 'Learn JavaScript' },
-    { content: 'Learn React' },
-    { content: 'Build a project' }
-]
+const PORT = process.env.PORT;
 
-app.get('/todos', (req, res) => {
-    res.json(todos)
-})
+const pool = new Pool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: 5432,
+});
 
-app.post('/todos', (req, res) => {
-    const { content } = req.body
-    if (!content) {
-        return res.status(400).send('Missing content')
+async function initDb() {
+    await pool.query(`
+    CREATE TABLE IF NOT EXISTS todos (
+      id SERIAL PRIMARY KEY,
+      content TEXT NOT NULL
+    )
+  `);
+}
+
+async function waitForDb() {
+    while (true) {
+        try {
+            await initDb();
+            console.log("Connected to todo database");
+            break;
+        } catch (err) {
+            console.log("Waiting for todo database...");
+            await new Promise(r => setTimeout(r, 2000));
+        }
     }
+}
 
-    todos.push({ content })
-    res.status(201).json({ status: 'ok' })
-})
+waitForDb();
 
-const PORT = process.env.PORT
+app.get("/todos", async (req, res) => {
+    const result = await pool.query("SELECT content FROM todos");
+    res.json(result.rows);
+});
+
+app.post("/todos", async (req, res) => {
+    const { content } = req.body;
+    if (!content) return res.status(400).send("Missing content");
+
+    await pool.query("INSERT INTO todos (content) VALUES ($1)", [content]);
+    res.status(201).json({ status: "ok" });
+});
 
 app.listen(PORT, () => {
-    console.log(`todo-backend running on port ${PORT}`)
-})
+    console.log(`todo-backend running on port ${PORT}`);
+});
