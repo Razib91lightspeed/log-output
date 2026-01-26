@@ -1,0 +1,64 @@
+name: Release application
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: project-d585011e-65cd-481e-b8a
+  GKE_CLUSTER: dwk-cluster
+  GKE_ZONE: europe-north1-b
+  REGISTRY: europe-north1-docker.pkg.dev
+  REPOSITORY: k8s-images
+  IMAGE: colorcontent
+  SERVICE: dwk-environments
+
+jobs:
+  build-publish-deploy:
+    name: Build, Publish and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/864569330386/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: github-actions@project-d585011e-65cd-481e-b8a.iam.gserviceaccount.com
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker
+        run: gcloud --quiet auth configure-docker europe-north1-docker.pkg.dev
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          project_id: ${{ env.PROJECT_ID }}
+          location: ${{ env.GKE_ZONE }}
+
+      - name: Form image tag
+        run: |
+          echo "IMAGE_TAG=${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}:${{ github.ref_name }}-${{ github.sha }}" >> $GITHUB_ENV
+
+      - name: Build image
+        run: docker buildx build --platform linux/amd64 -t $IMAGE_TAG dwk-environments
+
+      - name: Push image
+        run: docker push $IMAGE_TAG
+
+      - name: Set up Kustomize
+        uses: imranismail/setup-kustomize@v2.1.0
+
+      - name: Deploy to GKE
+        run: |
+          cd dwk-environments
+          kustomize edit set image PROJECT/IMAGE=$IMAGE_TAG
+          kustomize build . | kubectl apply -f -
+          kubectl rollout status deployment $SERVICE
+          kubectl get services -o wide
