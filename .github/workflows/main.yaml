@@ -36,7 +36,6 @@ jobs:
           workload_identity_provider: projects/864569330386/locations/global/workloadIdentityPools/github-pool/providers/github-provider-v3
           service_account: github-actions@project-d585011e-65cd-481e-b8a.iam.gserviceaccount.com
           token_format: access_token
-
       # 3. Install gcloud SDK
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
