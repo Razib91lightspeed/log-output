@@ -85,7 +85,7 @@ The following screenshots are included as proof of successful deployment:
 - Pods and Service
 ![Gateway created and programmed](image/ex3.5.1.jpeg)
 
- – Web application accessed via external IP in a browser
+- Web application accessed via external IP in a browser
 
 ![Gateway created and programmed](image/ex3.5.2.jpeg)
 
