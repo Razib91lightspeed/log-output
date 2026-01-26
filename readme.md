@@ -89,6 +89,7 @@ After completing this exercise:
 
 ---
 
+
 ## Status
 
 Exercise 3.7 completed successfully.

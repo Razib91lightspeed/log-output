@@ -2,6 +2,11 @@ name: Release application
 
 on:
   push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '*'
+
 
 # Required for Workload Identity Federation
 permissions:
