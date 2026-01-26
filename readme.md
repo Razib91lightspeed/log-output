@@ -82,9 +82,12 @@ After deployment, the following checks were performed:
 ## Screenshots
 
 The following screenshots are included as proof of successful deployment:
+- Pods and Service
+![Gateway created and programmed](image/ex3.5.1.jpeg)
 
-- `image/ex3.5.1.jpeg` – Kubernetes resources showing running pods and service
-- `image/ex3.5.2.jpeg` – Web application accessed via external IP in a browser
+ – Web application accessed via external IP in a browser
+
+![Gateway created and programmed](image/ex3.5.2.jpeg)
 
 ---
 
