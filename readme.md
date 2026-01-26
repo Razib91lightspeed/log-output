@@ -1,72 +1,65 @@
-# Kubernetes Exercise 3.2 – GKE Ingress
+# Kubernetes Exercise 3.3 – Gateway API
 
-This repository contains the solution for **Exercise 3.2 (Back to Ingress)** of the Kubernetes course.
+This repository contains the solution for **Exercise 3.3 (To the Gateway)**.
 
-The goal of this exercise was to deploy multiple applications to **Google Kubernetes Engine (GKE)** and expose them using a **Layer 7 Ingress** with path-based routing.
-
----
-
-## Deployed Applications
-
-### 1. log-output
-- Node.js + Express application
-- Fetches and caches a random image
-- Responds with **HTTP 200 on `/`** (required for GKE Ingress health checks)
-
-### 2. ping-pong
-- Node.js application backed by PostgreSQL
-- Responds on `/pingpong`
-- Maintains a persistent counter in the database
-
-### 3. PostgreSQL
-- Deployed as a StatefulSet
-- Persistent volume used for data storage
-- Shared only with ping-pong
-
-All resources are deployed inside the `project` namespace.
+In this exercise, the Kubernetes **Ingress** resource was replaced with the **Gateway API**, which is the newer and more expressive way to manage external traffic routing in Kubernetes on Google Kubernetes Engine (GKE).
 
 ---
 
-## Ingress Configuration
+## 🔄 What Was Done
 
-A single **GKE Ingress** is used to expose both applications:
+### 1. Ingress Removed
+- The previously used Ingress resource (from Exercise 3.2) was deleted.
+- External traffic routing is now fully handled by the Gateway API.
 
-| Path        | Service          | Description                 |
-|------------|------------------|-----------------------------|
-| `/`        | log-output-svc   | Default route (health check) |
-| `/pingpong` | ping-pong-svc    | Ping-pong counter endpoint |
+### 2. Gateway API Enabled
+- Gateway API support was enabled on the GKE cluster using:
+  ```bash
+  gcloud container clusters update dwk-cluster \
+    --location=europe-north1-b \
+    --gateway-api=standard
+```
+### 3. Services Updated
+The services `log-output-svc` and `ping-pong-svc` were changed from **NodePort** to **ClusterIP**, as required by the Gateway API.
 
-Ingress uses **NodePort services**, as required by GKE.
+### 4. Gateway Created
+A `Gateway` resource was created using the recommended GKE `GatewayClass`:
+
+- `gke-l7-global-external-managed`
+
+The Gateway listens for HTTP traffic on port 80 and automatically provisions a GCP Layer 7 load balancer.
+
+### 5. HTTPRoute Created
+An `HTTPRoute` resource was created to define path-based routing:
+
+- `/` → `log-output-svc`
+- `/pingpong` → `ping-pong-svc`
+
+The route is explicitly attached to the Gateway listener.
 
 ---
 
-## Verification
+## 🌐 Verification
 
-The deployment was verified using the public GKE Ingress IP:
+After applying the Gateway and HTTPRoute, the Gateway was assigned a public IP address.
+
+Traffic routing was verified using:
 
 ```bash
-curl http://<INGRESS_IP>/
-curl http://<INGRESS_IP>/pingpong
+curl http://http://34.54.88.89//
+curl http://http://34.54.88.89//pingpong
 ```
-
----
+The root path served the log-output application, and `/pingpong` was routed to the ping-pong application.
 
 ## Proof of Completion
 
-Both endpoints return valid **HTTP 200** responses through the GKE Ingress.
+The following screenshots demonstrate successful completion of Exercise 3.3.
 
-The following screenshots demonstrate the successful deployment and routing:
 
-### Ingress Assigned External IP
-This screenshot shows that the GKE Ingress was successfully provisioned with a public external IP address.
+![Gateway created and programmed](image/ex3.3.1.jpeg)
 
-![Ingress assigned external IP](image/ex3.2.1.jpeg)
 
-### Successful Responses From Both Routes
-This screenshot confirms that:
-- `/` correctly routes to **log-output**
-- `/pingpong` correctly routes to **ping-pong**
+![HTTPRoute accepted and resolved](image/ex3.3.2.jpeg)
 
-![Ingress routing verification](image/ex3.2.2.jpeg)
 
----
+![Successful routing via Gateway IP](image/ex3.3.3.jpeg)
