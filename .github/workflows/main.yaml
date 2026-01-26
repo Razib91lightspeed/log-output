@@ -73,27 +73,26 @@ jobs:
       # 10. Deploy to GKE with per-branch namespace
       - name: Deploy to GKE
         run: |
-          # Determine namespace: 'main' branch goes to 'project', others to branch name
           if [ "${{ github.ref_name }}" = "main" ]; then
             NAMESPACE="project"
           else
             NAMESPACE="${{ github.ref_name }}"
           fi
 
+          # MOVE TO THE FOLDER WHERE KUSTOMIZATION.YAML LIVES
+          cd dwk-environments
+
           echo "Deploying branch '${{ github.ref_name }}' to namespace '$NAMESPACE'"
 
-          # Create namespace if it doesn't exist
           kubectl create namespace $NAMESPACE || true
-
-          # Set the context to the target namespace
           kubectl config set-context --current --namespace=$NAMESPACE
 
-          # Use Kustomize to update the manifest
-          # Ensure 'PROJECT/IMAGE' matches the placeholder in your kustomization.yaml
           kustomize edit set namespace $NAMESPACE
+
+          # Ensure 'PROJECT/IMAGE' exists as a placeholder in dwk-environments/kustomization.yaml
           kustomize edit set image PROJECT/IMAGE=$IMAGE_TAG
 
-          # Apply and verify
           kustomize build . | kubectl apply -f -
+
+          # Note: $SERVICE must match the name of the deployment inside your manifests
           kubectl rollout status deployment $SERVICE --timeout=2m
-          kubectl get services -o wide
