@@ -3,9 +3,9 @@ name: Release application
 on:
   push:
     branches:
-      - main
+      - '**'
 
-# IMPORTANT: required for Workload Identity Federation (OIDC)
+# Required for Workload Identity Federation (OIDC)
 permissions:
   id-token: write
   contents: read
@@ -36,6 +36,7 @@ jobs:
           workload_identity_provider: projects/864569330386/locations/global/workloadIdentityPools/github-pool/providers/github-provider-v3
           service_account: github-actions@project-d585011e-65cd-481e-b8a.iam.gserviceaccount.com
           token_format: access_token
+
       # 3. Install gcloud SDK
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
@@ -59,7 +60,7 @@ jobs:
 
       # 7. Build Docker image (linux/amd64 for GKE compatibility)
       - name: Build image
-        run: docker buildx build --platform linux/amd64 -t $IMAGE_TAG dwk-environments
+        run: docker buildx build --platform linux/amd64 -t $IMAGE_TAG .
 
       # 8. Push image to Google Artifact Registry
       - name: Push image
@@ -69,11 +70,23 @@ jobs:
       - name: Set up Kustomize
         uses: imranismail/setup-kustomize@v2.1.0
 
-      # 10. Deploy to GKE using Kustomize
+      # 10. Deploy to GKE with per-branch namespace
       - name: Deploy to GKE
         run: |
-          cd dwk-environments
+          if [ "$GITHUB_REF_NAME" = "main" ]; then
+            NAMESPACE=project
+          else
+            NAMESPACE=$GITHUB_REF_NAME
+          fi
+
+          echo "Deploying branch '$GITHUB_REF_NAME' to namespace '$NAMESPACE'"
+
+          kubectl create namespace $NAMESPACE || true
+          kubectl config set-context --current --namespace=$NAMESPACE
+
+          kustomize edit set namespace $NAMESPACE
           kustomize edit set image PROJECT/IMAGE=$IMAGE_TAG
+
           kustomize build . | kubectl apply -f -
           kubectl rollout status deployment $SERVICE
           kubectl get services -o wide
