@@ -44,6 +44,6 @@ if (!PORT) {
   throw new Error("PORT env var is required");
 }
 
-server.listen(PORT, () => {
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`Ping-pong running on port ${PORT}`);
 });
