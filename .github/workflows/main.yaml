@@ -5,6 +5,11 @@ on:
     branches:
       - main
 
+# IMPORTANT: required for Workload Identity Federation (OIDC)
+permissions:
+  id-token: write
+  contents: read
+
 env:
   PROJECT_ID: project-d585011e-65cd-481e-b8a
   GKE_CLUSTER: dwk-cluster
@@ -20,21 +25,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout repository
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 2. Authenticate to Google Cloud using Workload Identity Federation
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: projects/864569330386/locations/global/workloadIdentityPools/github-pool/providers/github-provider
           service_account: github-actions@project-d585011e-65cd-481e-b8a.iam.gserviceaccount.com
 
+      # 3. Install gcloud SDK
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
+      # 4. Configure Docker to push to Artifact Registry
       - name: Configure Docker
         run: gcloud --quiet auth configure-docker europe-north1-docker.pkg.dev
 
+      # 5. Get credentials for the GKE cluster
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v2
         with:
@@ -42,19 +52,24 @@ jobs:
           project_id: ${{ env.PROJECT_ID }}
           location: ${{ env.GKE_ZONE }}
 
+      # 6. Form a unique image tag (branch + commit SHA)
       - name: Form image tag
         run: |
           echo "IMAGE_TAG=${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}:${{ github.ref_name }}-${{ github.sha }}" >> $GITHUB_ENV
 
+      # 7. Build Docker image (linux/amd64 for GKE compatibility)
       - name: Build image
         run: docker buildx build --platform linux/amd64 -t $IMAGE_TAG dwk-environments
 
+      # 8. Push image to Google Artifact Registry
       - name: Push image
         run: docker push $IMAGE_TAG
 
+      # 9. Install Kustomize
       - name: Set up Kustomize
         uses: imranismail/setup-kustomize@v2.1.0
 
+      # 10. Deploy to GKE using Kustomize
       - name: Deploy to GKE
         run: |
           cd dwk-environments
