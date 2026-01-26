@@ -2,10 +2,8 @@ name: Release application
 
 on:
   push:
-    branches:
-      - '**'
 
-# Required for Workload Identity Federation (OIDC)
+# Required for Workload Identity Federation
 permissions:
   id-token: write
   contents: read
@@ -25,27 +23,26 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout repository
+      # 1. Checkout code
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Authenticate to Google Cloud using Workload Identity Federation
+      # 2. Authenticate to Google Cloud (OIDC)
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: projects/864569330386/locations/global/workloadIdentityPools/github-pool/providers/github-provider-v3
           service_account: github-actions@project-d585011e-65cd-481e-b8a.iam.gserviceaccount.com
-          token_format: access_token
 
-      # 3. Install gcloud SDK
+      # 3. Install gcloud
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      # 4. Configure Docker to push to Artifact Registry
+      # 4. Configure Docker for Artifact Registry
       - name: Configure Docker
-        run: gcloud --quiet auth configure-docker europe-north1-docker.pkg.dev
+        run: gcloud auth configure-docker europe-north1-docker.pkg.dev --quiet
 
-      # 5. Get credentials for the GKE cluster
+      # 5. Get GKE credentials
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v2
         with:
@@ -53,16 +50,16 @@ jobs:
           project_id: ${{ env.PROJECT_ID }}
           location: ${{ env.GKE_ZONE }}
 
-      # 6. Form a unique image tag (branch + commit SHA)
+      # 6. Create image tag
       - name: Form image tag
         run: |
           echo "IMAGE_TAG=${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE }}:${{ github.ref_name }}-${{ github.sha }}" >> $GITHUB_ENV
 
-      # 7. Build Docker image (linux/amd64 for GKE compatibility)
+      # 7. Build image
       - name: Build image
         run: docker buildx build --platform linux/amd64 -t $IMAGE_TAG .
 
-      # 8. Push image to Google Artifact Registry
+      # 8. Push image
       - name: Push image
         run: docker push $IMAGE_TAG
 
@@ -70,8 +67,8 @@ jobs:
       - name: Set up Kustomize
         uses: imranismail/setup-kustomize@v2.1.0
 
-      # 10. Deploy to GKE with per-branch namespace
-      - name: Deploy to GKE
+      # 10. Deploy per branch
+      - name: Deploy
         run: |
           if [ "${{ github.ref_name }}" = "main" ]; then
             NAMESPACE="project"
@@ -79,20 +76,14 @@ jobs:
             NAMESPACE="${{ github.ref_name }}"
           fi
 
-          # MOVE TO THE FOLDER WHERE KUSTOMIZATION.YAML LIVES
-          cd dwk-environments
-
           echo "Deploying branch '${{ github.ref_name }}' to namespace '$NAMESPACE'"
 
           kubectl create namespace $NAMESPACE || true
           kubectl config set-context --current --namespace=$NAMESPACE
 
           kustomize edit set namespace $NAMESPACE
-
-          # Ensure 'PROJECT/IMAGE' exists as a placeholder in dwk-environments/kustomization.yaml
           kustomize edit set image PROJECT/IMAGE=$IMAGE_TAG
 
           kustomize build . | kubectl apply -f -
-
-          # Note: $SERVICE must match the name of the deployment inside your manifests
-          kubectl rollout status deployment $SERVICE --timeout=2m
+          kubectl rollout status deployment $SERVICE
+          kubectl get services -o wide
