@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: log-output
+  name: ping-pong
   namespace: project
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: log-output
+      app: ping-pong
   template:
     metadata:
       labels:
-        app: log-output
+        app: ping-pong
     spec:
       containers:
-        - name: log-output
-          image: europe-north1-docker.pkg.dev/project-d585011e-65cd-481e-b8a/k8s-images/log-output:3.2
+        - name: ping-pong
+          image: europe-north1-docker.pkg.dev/project-.../ping-pong:3.4
           imagePullPolicy: Always
           ports:
             - containerPort: 3000

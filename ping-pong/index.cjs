@@ -1,9 +1,6 @@
 const http = require("http");
 const { Pool } = require("pg");
 
-/* =====================================================
-   PostgreSQL connection pool
-   ===================================================== */
 const pool = new Pool({
   host: process.env.POSTGRES_HOST,
   user: process.env.POSTGRES_USER,
@@ -12,9 +9,6 @@ const pool = new Pool({
   port: 5432,
 });
 
-/* =====================================================
-   Initialize database schema (idempotent)
-   ===================================================== */
 async function initDb() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS counter (
@@ -29,25 +23,14 @@ async function initDb() {
   }
 }
 
-/* Initialize DB but do NOT crash the app if it fails */
 initDb().catch(err => {
   console.error("Database initialization failed:", err.message);
 });
 
-/* =====================================================
-   HTTP server (GKE Ingress compatible)
-   ===================================================== */
 const server = http.createServer(async (req, res) => {
   try {
-    /* Health check endpoint (MANDATORY for GKE Ingress) */
-    if (req.url === "/" || req.url === "/health") {
-      res.statusCode = 200;
-      res.end("ok");
-      return;
-    }
-
-    /* Ping-pong endpoint */
-    if (req.url === "/pingpong") {
+    /* Root path now does ping-pong */
+    if (req.url === "/") {
       const result = await pool.query(
         "UPDATE counter SET value = value + 1 RETURNING value"
       );
@@ -56,7 +39,13 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    /* Unknown path */
+    /* Optional health check (still fine to keep) */
+    if (req.url === "/health") {
+      res.statusCode = 200;
+      res.end("ok");
+      return;
+    }
+
     res.statusCode = 404;
     res.end("not found");
   } catch (err) {
@@ -66,11 +55,7 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-/* =====================================================
-   Start server
-   ===================================================== */
 const PORT = process.env.PORT || 3000;
-
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Ping-pong service running on port ${PORT}`);
 });
