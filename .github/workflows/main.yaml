@@ -51,6 +51,7 @@ jobs:
           cluster_name: ${{ env.GKE_CLUSTER }}
           project_id: ${{ env.PROJECT_ID }}
           location: ${{ env.GKE_ZONE }}
+          
 
       # 6. Form a unique image tag (branch + commit SHA)
       - name: Form image tag
