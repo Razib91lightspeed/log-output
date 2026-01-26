@@ -5,6 +5,7 @@ resources:
   - manifests/deployment.yaml
   - manifests/service.yaml
 
+
 images:
   - name: PROJECT/IMAGE
     newName: europe-north1-docker.pkg.dev/project-d585011e-65cd-481e-b8a/k8s-images/colorcontent
