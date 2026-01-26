@@ -7,3 +7,5 @@ A separate GitHub Actions workflow listens to branch deletion events and removes
 This ensures that temporary branch environments do not remain in the cluster after development ends and keeps the Kubernetes environment clean and up to date.
 
 ## Exercise 3.8 completed successfully.
+![Exercise 3.8 – Cleanup workflow proof](image/ex3.8.1jpeg)
+![Exercise 3.8 – Cleanup workflow proof](image/ex3.8.2jpeg)
