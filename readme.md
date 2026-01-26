@@ -1,103 +1,70 @@
-# Exercise 3.6 – Automatic Deployment with GitHub Actions and GKE
+# Exercise 3.7 – Separate Environment for Each Branch
 
 ## Overview
 
-This exercise implements an automatic deployment pipeline using GitHub Actions for a Kubernetes application running on Google Kubernetes Engine (GKE).
+This exercise extends the CI/CD pipeline created in the previous tasks by introducing **separate Kubernetes environments for each Git branch**.
 
-The pipeline is triggered on every git push and performs the following actions automatically:
-- Builds a Docker image
-- Pushes the image to Google Artifact Registry
-- Deploys the updated image to the GKE cluster using Kustomize
+Each branch is deployed into its own Kubernetes namespace, allowing isolated testing and development environments.
+The `main` branch continues to be deployed into a fixed production namespace called `project`.
 
-The goal of this task is to enable continuous delivery from a git push to production without manual steps.
+This approach closely matches real-world deployment pipelines that use feature branching.
 
 ---
 
-## Technologies Used
+## Goal of the Task
 
-- GitHub Actions
-- Google Kubernetes Engine (GKE)
-- Google Artifact Registry
-- Docker
-- Kustomize
-- kubectl
-- Workload Identity Federation (OIDC)
+- Deploy each Git branch into its own Kubernetes namespace
+- Keep the `main` branch deployed in the `project` namespace
+- Use GitHub Actions, Kustomize, and Google Kubernetes Engine
+- Ensure deployments happen automatically on every push
 
 ---
 
-## CI/CD Pipeline Location
+## Key Concept
 
-The GitHub Actions workflow is defined in:
+The namespace is determined dynamically based on the branch name:
 
-.github/workflows/main.yaml
+- If the branch is `main`, the namespace is `project`
+- Otherwise, the namespace name equals the branch name
 
-This workflow runs on every push to the repository.
-
----
-
-## Pipeline Steps
-
-### 1. Trigger
-
-The workflow is triggered on any branch push. This allows testing deployments on non-main branches while keeping main as the primary production branch.
+This allows multiple versions of the application to run simultaneously without interfering with each other.
 
 ---
 
-### 2. Authentication to Google Cloud
+## Kubernetes Configuration Location
 
-Authentication is handled using Workload Identity Federation (OIDC).
-This avoids storing long-lived service account keys in GitHub secrets and follows Google’s recommended security practices.
+The Kubernetes configuration for this task is located in the `dwk-environments` directory.
 
-The workflow requests an OIDC token from GitHub and exchanges it for a short-lived Google Cloud access token.
+This directory contains:
+- A `kustomization.yaml` file
+- Deployment and service manifests under the `manifests` directory
 
----
-
-### 3. Docker Image Build
-
-A Docker image is built for the application using Docker Buildx.
-
-The image is built for the linux/amd64 platform to ensure compatibility with GKE nodes.
-
-Each image is tagged uniquely using:
-- The branch name
-- The Git commit SHA
-
-This ensures every deployment is traceable to a specific commit.
+The `kustomization.yaml` file acts as the entry point for Kustomize and is modified dynamically during deployment.
 
 ---
 
-### 4. Push to Google Artifact Registry
+## CI/CD Pipeline Changes
 
-After building the image, it is pushed to Google Artifact Registry.
+The GitHub Actions workflow was updated so that during deployment it:
 
-Artifact Registry is used instead of Docker Hub to reduce latency and integrate tightly with GKE.
-
----
-
-### 5. Deployment Using Kustomize
-
-Kustomize is used to manage Kubernetes manifests.
-
-The kustomization.yaml file defines:
-- The deployment manifest
-- The service manifest
-- An image placeholder
-
-During the deployment step, the placeholder image is replaced dynamically with the newly built image tag.
-
-The generated manifests are applied using kubectl, and the rollout status is monitored until completion.
+1. Determines recognized branch name from GitHub
+2. Maps `main` to the `project` namespace
+3. Uses the branch name as namespace for all other branches
+4. Creates the namespace if it does not already exist
+5. Switches the Kubernetes context to the selected namespace
+6. Updates the namespace inside `kustomization.yaml`
+7. Replaces the image placeholder with the newly built image
+8. Applies the manifests and waits for rollout completion
 
 ---
 
-## Kubernetes Configuration
+## Deployment Behavior
 
-Kubernetes configuration is located in the dwk-environments directory.
-
-The kustomization.yaml file includes:
-- manifests/deployment.yaml
-- manifests/service.yaml
-
-An image placeholder named PROJECT/IMAGE is defined and updated dynamically during deployment.
+- Each branch push triggers a new deployment
+- Each branch has its own isolated namespace
+- The `main` branch always represents the stable environment
+- Feature branches can be tested independently
+- No manual kubectl commands are required
 
 ---
 
@@ -105,24 +72,23 @@ An image placeholder named PROJECT/IMAGE is defined and updated dynamically duri
 
 After completing this exercise:
 
-- A git push automatically triggers:
-  - Docker image build
-  - Image publish to Artifact Registry
-  - Deployment to GKE
-- No manual kubectl or Docker commands are required
-- Deployment waits until rollout completes successfully
-- The setup follows cloud-native CI/CD best practices
+- Multiple branch deployments can coexist in the cluster
+- Each branch has a fully isolated environment
+- Production remains stable in the `project` namespace
+- The deployment pipeline is fully automated
+- The solution matches the course requirements exactly
 
 ---
 
 ## Notes
 
-- Workload Identity Federation is used instead of service account keys
-- Kustomize simplifies image updates and deployment management
-- The pipeline is fully automated and reproducible
+- Branch names are assumed to be valid Kubernetes namespace names
+- Existing namespaces are reused safely
+- Namespace creation errors are handled gracefully
+- This setup mirrors professional CI/CD workflows
 
 ---
 
 ## Status
 
-Exercise 3.6 completed successfully
+Exercise 3.7 completed successfully.
