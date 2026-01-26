@@ -5,9 +5,14 @@ import express from "express";
 
 const app = express();
 
-const SHARED_DIR = "/usr/src/app/shared";
+const SHARED_DIR = "/app/shared";
 const IMAGE_PATH = path.join(SHARED_DIR, "image.jpg");
 const META_PATH = path.join(SHARED_DIR, "image.meta.json");
+
+/* Ensure directory exists */
+if (!fs.existsSync(SHARED_DIR)) {
+  fs.mkdirSync(SHARED_DIR, { recursive: true });
+}
 
 const TTL = 10 * 60 * 1000; // 10 minutes
 
