@@ -1,22 +1,13 @@
-# Exercise 3.10 – Database Backup CronJob
+## Exercise 3.11 – Resource Requests and Limits
 
-This task implements a Kubernetes **CronJob** that backs up the PostgreSQL database once per day using `pg_dump` and stores the backup in **Google Cloud Storage**.
+Resource requests and limits were configured for the project deployment based on observed pod usage.
+The values were verified using `kubectl top pods` to ensure they are sensible and sufficient.
 
-## What was implemented
+**Verification:**
+- CPU and memory requests/limits are applied to the running pod
+- Actual usage stays well below defined limits
 
-- A Kubernetes **CronJob** that:
-  - Runs `pg_dump` against the PostgreSQL database
-  - Stores the dump temporarily in a shared volume
-  - Uploads the backup file to a Google Cloud Storage bucket
-- Google Cloud access is handled via a Kubernetes service account with proper IAM permissions
-- The job was tested by manually triggering it and verifying successful execution
+![Exercise 3.11 – Resource requests and limits verification](images/ex3.11.png)
 
-## Proof of completion
-
-- **Google Cloud Storage backup files**
-  ![GCS backup proof](image/ex3.10.1.jpeg)
-
-- **Successful CronJob execution**
-  ![CronJob execution proof](image/ex3.10.2.jpeg)
 
 
