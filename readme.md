@@ -29,6 +29,13 @@ To verify that the readiness probe works correctly, the database connection was 
   value: wrong-postgres
 ~~~
 
+Actual part
+
+~~~yaml
+- name: POSTGRES_HOST
+  value: postgres
+~~~
+
 ---
 
 ## Expected Behavior
