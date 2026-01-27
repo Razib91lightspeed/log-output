@@ -1,13 +1,9 @@
-## Exercise 3.11 – Resource Requests and Limits
+## Exercise 3.12 – GKE Logging
 
-Resource requests and limits were configured for the project deployment based on observed pod usage.
-The values were verified using `kubectl top pods` to ensure they are sensible and sufficient.
+GKE Cloud Logging was enabled using the built-in observability features.
+Application logs are automatically collected from Kubernetes container stdout.
 
-**Verification:**
-- CPU and memory requests/limits are applied to the running pod
-- Actual usage stays well below defined limits
+To verify logging, application logs from the running workload were observed
+in Google Cloud Logs Explorer.
 
-![Exercise 3.11 – Resource requests and limits verification](image/ex3.11.jpeg)
-
-
-
+![Exercise 3.12 – GKE logging verification](image/ex3.12-logs.jpeg)
