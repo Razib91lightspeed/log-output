@@ -9,13 +9,14 @@ Ensure the Ping-pong application is marked **Not Ready** when it is not connecte
 
 The Ping-pong deployment uses an HTTP-based readiness probe that checks database connectivity via the `/ready` endpoint.
 
+´´´bash
 readinessProbe:
   httpGet:
     path: /ready
     port: 3000
   initialDelaySeconds: 5
   periodSeconds: 5
-
+´´´
 ---
 
 
