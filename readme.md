@@ -54,7 +54,7 @@ Kubernetes correctly prevents traffic from being routed to the Ping-pong service
 
 ## Proof
 
-See screenshot: image/ex4.2.jpeg
+See screenshot from terminal
 ![Exercise 4.2 – Readiness probes without database](image/ex4.2.jpeg)
 
 Observed pod state:
