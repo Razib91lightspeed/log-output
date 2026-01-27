@@ -18,16 +18,6 @@ readinessProbe:
 
 ---
 
-## Application Readiness Endpoint
-
-The application exposes `/ready`, which performs a database query:
-
-- Returns **200 OK** if the database is reachable
-- Returns **503 Service Unavailable** if the database is unreachable
-
-This ensures readiness reflects real database availability.
-
----
 
 ## Intentional Database Failure (Test Case)
 
