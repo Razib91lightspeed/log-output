@@ -21,7 +21,7 @@ The following screenshot demonstrates the correct state:
 
 ### Proof of Completion
 
-![Exercise 4.1 – Readiness probes without database](image/ex4.1.png)
+![Exercise 4.1 – Readiness probes without database](image/ex4.1.jpeg)
 
 ## Expected Behavior After Adding Database
 
