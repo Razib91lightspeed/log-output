@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: todo-db-backup
+  namespace: project
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+
+          nodeSelector:
+            cloud.google.com/gke-nodepool: storage-pool
+
+          volumes:
+            - name: backup
+              emptyDir: {}
+
+          containers:
+            - name: dump
+              image: postgres:16
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+              env:
+                - name: PGHOST
+                  value: postgres.project.svc.cluster.local
+                - name: PGUSER
+                  value: pingpong
+                - name: PGPASSWORD
+                  value: pingpong
+                - name: PGDATABASE
+                  value: pingpong
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "Running pg_dump..."
+                  pg_dump > /backup/backup.sql
+
+            - name: upload
+              image: google/cloud-sdk:slim
+              volumeMounts:
+                - name: backup
+                  mountPath: /backup
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "Uploading to GCS..."
+                  gsutil cp /backup/backup.sql gs://razib-todo-backups/backup-$(date +%F-%H%M).sql
+                  echo "Backup completed"
