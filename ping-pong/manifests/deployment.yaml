@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: ping-pong
-          image: europe-north1-docker.pkg.dev/project-.../ping-pong:3.4
+          image: europe-north1-docker.pkg.dev/project-d585011e-65cd-481e-b8a/k8s-images/ping-pong:fixed
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
@@ -30,3 +30,11 @@ spec:
               value: pingpong
             - name: POSTGRES_PASSWORD
               value: pingpong
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - pg_isready -h postgres -p 5432 -U pingpong
+            initialDelaySeconds: 5
+            periodSeconds: 5

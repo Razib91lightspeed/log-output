@@ -1,5 +1,6 @@
 import fs from "fs";
 import express from "express";
+let hasReceivedPingpongData = false;
 
 const app = express();
 
@@ -75,3 +76,18 @@ app.get("/image", (_req, res) => {
 app.listen(3000, () => {
   console.log("Reader running on port 3000");
 });
+
+app.post("/log", express.json(), (req, res) => {
+  hasReceivedPingpongData = true;
+  res.sendStatus(200);
+});
+
+app.get("/ready", (_req, res) => {
+  if (hasReceivedPingpongData) {
+    res.sendStatus(200);
+  } else {
+    res.sendStatus(503);
+  }
+});
+
+
