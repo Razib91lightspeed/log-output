@@ -9,23 +9,25 @@ Ensure the Ping-pong application is marked **Not Ready** when it is not connecte
 
 The Ping-pong deployment uses an HTTP-based readiness probe that checks database connectivity via the `/ready` endpoint.
 
-´´´yaml
+~~~yaml
 readinessProbe:
   httpGet:
     path: /ready
     port: 3000
   initialDelaySeconds: 5
   periodSeconds: 5
-´´´
----
+~~~
 
+---
 
 ## Intentional Database Failure (Test Case)
 
-To verify the probe works, the database connection was intentionally broken by modifying the environment variable:
+To verify that the readiness probe works correctly, the database connection was intentionally broken by modifying the environment variable:
 
+~~~yaml
 - name: POSTGRES_HOST
   value: wrong-postgres
+~~~
 
 ---
 
@@ -40,19 +42,21 @@ To verify the probe works, the database connection was intentionally broken by m
 ## Result
 
 Kubernetes correctly prevents traffic from being routed to the Ping-pong service when the database is unreachable.
+The readiness probe fails as expected while the container continues running.
 
 ---
 
 ## Proof
 
-See screenshot from terminal
+See screenshot from terminal:
+
 ![Exercise 4.2 – Readiness probes without database](image/ex4.2.jpeg)
 
 Observed pod state:
 
-READY: 0/1
-STATUS: Running
+- **READY:** 0/1
+- **STATUS:** Running
 
 ---
 
-## EnD
+## End
