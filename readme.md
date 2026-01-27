@@ -19,8 +19,4 @@ This task implements a Kubernetes **CronJob** that backs up the PostgreSQL datab
 - **Successful CronJob execution**
   ![CronJob execution proof](image/ex3.10.2.jpeg)
 
-## Files
 
-- `cronjobs/todo-backup-cronjob.yaml` – CronJob definition for database backups
-- `image/ex3.10.1.jpeg` – GCS bucket showing created backup files
-- `image/ex3.10.2.jpeg` – Kubernetes Job/CronJob execution logs
