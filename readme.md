@@ -1,34 +1,67 @@
-# Exercise 4.1 – Readiness Probes
+# Exercise 4.2 – Readiness Probe with Broken Database
 
-This task implements readiness probes for both applications:
+## Goal
+Ensure the Ping-pong application is marked **Not Ready** when it is not connected to the database.
 
-- **Ping-pong** becomes ready only when it can connect to the PostgreSQL database.
-- **Log-output** becomes ready only after it has successfully received data from the Ping-pong application.
+---
 
-## Verification (Without Database)
+## Readiness Probe Configuration
 
-Before deploying the database StatefulSet, the system behaves as expected:
+The Ping-pong deployment uses an HTTP-based readiness probe that checks database connectivity via the `/ready` endpoint.
 
-- Ping-pong cannot resolve or connect to the database and remains **Not Ready (0/1)**.
-- Log-output is running, but only **one container is ready (1/2)** because it has not yet received data from Ping-pong.
+readinessProbe:
+  httpGet:
+    path: /ready
+    port: 3000
+  initialDelaySeconds: 5
+  periodSeconds: 5
 
-The following screenshot demonstrates the correct state:
+---
 
-- `log-output`: **1/2 READY**
-- `ping-pong`: **0/1 READY**
-- Ping-pong logs show database connection failures (`ENOTFOUND postgres`)
-- Log-output readiness endpoint is not available yet
+## Application Readiness Endpoint
 
-### Proof of Completion
+The application exposes `/ready`, which performs a database query:
 
-![Exercise 4.1 – Readiness probes without database](image/ex4.1.jpeg)
+- Returns **200 OK** if the database is reachable
+- Returns **503 Service Unavailable** if the database is unreachable
 
-## Expected Behavior After Adding Database
+This ensures readiness reflects real database availability.
 
-Once the database is deployed and Ping-pong establishes a connection:
+---
 
-- Ping-pong automatically becomes **Ready (1/1)**
-- Ping-pong sends data to Log-output
-- Log-output readiness probe passes and becomes **Ready (2/2)**
+## Intentional Database Failure (Test Case)
 
-This confirms that both readiness probes work as intended.
+To verify the probe works, the database connection was intentionally broken by modifying the environment variable:
+
+- name: POSTGRES_HOST
+  value: wrong-postgres
+
+---
+
+## Expected Behavior
+
+- Container stays **Running**
+- Pod stays **Not Ready (0/1)**
+- Kubernetes does **not** route traffic to the service
+
+---
+
+## Result
+
+Kubernetes correctly prevents traffic from being routed to the Ping-pong service when the database is unreachable.
+
+---
+
+## Proof
+
+See screenshot: image/ex4.2.jpeg
+![Exercise 4.2 – Readiness probes without database](image/ex4.2.jpeg)
+
+Observed pod state:
+
+READY: 0/1
+STATUS: Running
+
+---
+
+## EnD

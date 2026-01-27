@@ -9,27 +9,18 @@ const pool = new Pool({
   port: 5432,
 });
 
-async function initDb() {
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS counter (
-      id SERIAL PRIMARY KEY,
-      value INTEGER NOT NULL
-    )
-  `);
-
-  const res = await pool.query("SELECT value FROM counter LIMIT 1");
-  if (res.rows.length === 0) {
-    await pool.query("INSERT INTO counter (value) VALUES (0)");
+async function checkDb() {
+  try {
+    await pool.query("SELECT 1");
+    return true;
+  } catch {
+    return false;
   }
 }
 
-initDb().catch(err => {
-  console.error("Database initialization failed:", err.message);
-});
-
 const server = http.createServer(async (req, res) => {
   try {
-    /* Root path now does ping-pong */
+    // 🔹 Ping-pong main endpoint
     if (req.url === "/") {
       const result = await pool.query(
         "UPDATE counter SET value = value + 1 RETURNING value"
@@ -39,23 +30,36 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    /* Optional health check (still fine to keep) */
-    if (req.url === "/health") {
+    // 🔹 Liveness probe (process alive)
+    if (req.url === "/healthz") {
       res.statusCode = 200;
-      res.end("ok");
+      res.end("alive");
+      return;
+    }
+
+    // 🔹 Readiness probe (DB dependent)
+    if (req.url === "/ready") {
+      const ok = await checkDb();
+      if (ok) {
+        res.statusCode = 200;
+        res.end("ready");
+      } else {
+        res.statusCode = 503;
+        res.end("db not ready");
+      }
       return;
     }
 
     res.statusCode = 404;
     res.end("not found");
   } catch (err) {
-    console.error("Request handling error:", err.message);
+    console.error("Request error:", err.message);
     res.statusCode = 500;
-    res.end("internal error");
+    res.end("error");
   }
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`Ping-pong service running on port ${PORT}`);
+  console.log(`Ping-pong running on port ${PORT}`);
 });
