@@ -7,7 +7,7 @@ The values were verified using `kubectl top pods` to ensure they are sensible an
 - CPU and memory requests/limits are applied to the running pod
 - Actual usage stays well below defined limits
 
-![Exercise 3.11 – Resource requests and limits verification](images/ex3.11.png)
+![Exercise 3.11 – Resource requests and limits verification](images/ex3.11.jpeg)
 
 
 
