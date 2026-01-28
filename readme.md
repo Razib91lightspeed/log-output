@@ -1,16 +1,5 @@
 # Exercise 4.4 – Canary Deployment with CPU-Based Analysis (Ping-pong App)
 
-## Goal
-
-The purpose of this exercise is to demonstrate a canary deployment using Argo Rollouts,
-where Prometheus is used to monitor CPU usage and automatically stop unsafe updates.
-
-An AnalysisTemplate is configured to track the total CPU usage of all containers in the
-`project` namespace during a rollout. If the CPU usage exceeds a predefined threshold,
-the rollout is aborted and the stable version remains active.
-
----
-
 ## AnalysisTemplate (CPU Monitoring)
 
 An AnalysisTemplate named `ping-pong-cpu-usage` was created with the following behavior:
