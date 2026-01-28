@@ -47,15 +47,3 @@ spec:
                 secretKeyRef:
                   name: todo-db-secret
                   key: DB_PASSWORD
-          volumeMounts:
-            - name: data
-              mountPath: /var/lib/postgresql/data
-  volumeClaimTemplates:
-    - metadata:
-        name: data
-      spec:
-        accessModes: ["ReadWriteOnce"]
-        storageClassName: local-path
-        resources:
-          requests:
-            storage: 100Mi

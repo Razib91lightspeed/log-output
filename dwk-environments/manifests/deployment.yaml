@@ -14,6 +14,7 @@ spec:
     spec:
       containers:
         - name: dwk-environments
-          image: PROJECT/IMAGE
+          image: razibhasan2/dwk-environments:1.13
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
