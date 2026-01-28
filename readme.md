@@ -21,6 +21,10 @@ app.put("/todos/:id", async (req, res) => {
     res.json(result.rows[0]);
 });
 ```
+- Varified with curl
+```bash
+curl -X PUT http://localhost:8080/todos/1
+```
 - Updated backend logic to mark a todo as completed
 - Verified functionality using Kubernetes service and port-forwarding
 
