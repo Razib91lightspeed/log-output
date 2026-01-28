@@ -101,6 +101,7 @@ The screenshot shows:
 kubectl describe rollout ping-pong -n project
 ```
 ~~~bash
+(base) MacBook-Pro:log-output razibhasan$ kubectl describe rollout ping-pong -n project
 Name:         ping-pong
 Namespace:    project
 Labels:       <none>
@@ -243,7 +244,7 @@ Events:
   Normal   AnalysisRunRunning      11m                rollouts-controller  Step Analysis Run 'ping-pong-7d84f4968c-5-1' Status New: 'Running' Previous: ''
   Warning  AnalysisRunError        10m                rollouts-controller  Step Analysis Run 'ping-pong-7d84f4968c-5-1' Status New: 'Error' Previous: 'Running'
   Warning  RolloutAborted          10m                rollouts-controller  Rollout aborted update to revision 5: Metric "cpu-usage" assessed Error due to consecutiveErrors (5) > consecutiveErrorLimit (4): "Error Message: invalid operation: < (mismatched types []float64 and float64)"
-(base) MacBook-Pro:log-output razibhasan$ 
+(base) MacBook-Pro:log-output razibhasan$
 ~~~
 
 
@@ -265,33 +266,4 @@ This behavior was successfully demonstrated.
 
 ---
 
-## Conclusion
-
-This exercise confirms that:
-
-- Prometheus metrics can be used to guard deployments
-- Argo Rollouts can automatically stop unsafe updates
-- Canary deployments prevent faulty versions from reaching production
-- CPU-based analysis is an effective safety mechanism
-
-Exercise 4.4 completed successfully.
-
-
-
-
-
-
-
-
-
-
-~~~bash
-kubectl -n prometheus port-forward \
-  prometheus-kube-prometheus-stack-prometheus-0 9090:9090
-~~~
-
-
-![Exercise 4.3 – PromQL query result](image/ex4.3.2.jpeg)
-
----
-
+## End
