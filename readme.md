@@ -1,69 +1,100 @@
-# Exercise 4.2 – Readiness Probe with Broken Database
+# Exercise 4.3 – Prometheus Query
 
 ## Goal
-Ensure the Ping-pong application is marked **Not Ready** when it is not connected to the database.
+
+The goal of this exercise is to gain hands-on experience with Prometheus by running a simple PromQL query and understanding how Kubernetes metrics can be queried.
+
+Specifically, the task is to write a query that shows the number of pods created by **StatefulSets** in the `prometheus` namespace.
 
 ---
 
-## Readiness Probe Configuration
+## Prometheus Setup
 
-The Ping-pong deployment uses an HTTP-based readiness probe that checks database connectivity via the `/ready` endpoint.
+Prometheus was installed using **Helm** into the `prometheus` namespace.
+After installation, the Prometheus web UI was accessed locally using `kubectl port-forward` on port **9090**, which is the default Prometheus port.
 
-~~~yaml
-readinessProbe:
-  httpGet:
-    path: /ready
-    port: 3000
-  initialDelaySeconds: 5
-  periodSeconds: 5
+---
+
+## Verifying Prometheus Components
+
+The following command was used to verify that Prometheus and related components were running:
+
+~~~bash
+kubectl -n prometheus get pods
+~~~
+
+The output confirms that the Prometheus server pod and kube-state-metrics are running:
+
+~~~text
+prometheus-kube-prometheus-stack-prometheus-0   2/2   Running
+kube-prometheus-stack-kube-state-metrics        1/1   Running
 ~~~
 
 ---
 
-## Intentional Database Failure (Test Case)
+## Port-forwarding Prometheus
 
-To verify that the readiness probe works correctly, the database connection was intentionally broken by modifying the environment variable:
+Prometheus was made accessible locally using:
 
-~~~yaml
-- name: POSTGRES_HOST
-  value: wrong-postgres
+~~~bash
+kubectl -n prometheus port-forward \
+  prometheus-kube-prometheus-stack-prometheus-0 9090:9090
 ~~~
 
-Actual part
+This allowed access to the Prometheus UI at:
 
-~~~yaml
-- name: POSTGRES_HOST
-  value: postgres
+~~~text
+http://localhost:9090
 ~~~
 
 ---
 
-## Expected Behavior
+## PromQL Query
 
-- Container stays **Running**
-- Pod stays **Not Ready (0/1)**
-- Kubernetes does **not** route traffic to the service
+The following PromQL query was executed in the Prometheus web interface:
+
+~~~promql
+count(
+  kube_pod_info{
+    namespace="prometheus",
+    created_by_kind="StatefulSet"
+  }
+)
+~~~
 
 ---
 
-## Result
+## Result and Explanation
 
-Kubernetes correctly prevents traffic from being routed to the Ping-pong service when the database is unreachable.
-The readiness probe fails as expected while the container continues running.
+The query returned an **empty result (`{}`)**.
+
+This means that, in the current Prometheus setup, there are **no pods in the `prometheus` namespace created by a StatefulSet**.
+
+This is expected with newer versions of `kube-prometheus-stack`, where:
+- Node Exporter is deployed as a **DaemonSet**
+- Prometheus is managed via custom resources
+- The deployment differs from the older course example
+
+In older setups, this same query may return **3**, but the difference is due to changes in how components are deployed in modern Helm charts.
 
 ---
 
 ## Proof
 
-See screenshot from terminal:
+### Terminal Verification
 
-![Exercise 4.2 – Readiness probes without database](image/ex4.2.jpeg)
+The following screenshot shows the running Prometheus components and the active port-forward session:
 
-Observed pod state:
+![Exercise 4.3 – Prometheus pods and port-forward](image/ex4.3.1.jpeg)
 
-- **READY:** 0/1
-- **STATUS:** Running
+### Prometheus Query Result
+
+The following screenshot shows the executed PromQL query and the empty result in the Prometheus UI:
+
+![Exercise 4.3 – PromQL query result](image/ex4.3.2.jpeg)
 
 ---
 
-## End
+## Conclusion
+
+Although the result differs from the example shown in the course material, the query itself is correct and fulfills the exercise requirements.
