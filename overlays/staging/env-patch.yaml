@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-output
+spec:
+  template:
+    spec:
+      containers:
+        - name: writer
+          env:
+            - name: ENVIRONMENT
+              value: staging
+            - name: BACKUP_ENABLED
+              value: "false"
+
+        - name: reader
+          env:
+            - name: ENVIRONMENT
+              value: staging
+            - name: BACKUP_ENABLED
+              value: "false"
