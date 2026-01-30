@@ -1,0 +1,10 @@
+{
+  "name": "broadcaster",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "commonjs",
+  "dependencies": {
+    "nats": "1.4.12",
+    "node-fetch": "2.6.7"
+  }
+}

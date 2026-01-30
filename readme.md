@@ -1,39 +1,27 @@
-# Exercise 4.5 – Update Todo (PUT)
+# Exercise 4.6 — Broadcaster Service
 
-This exercise extends the Project Todo application by adding support for marking todos as **done** using a `PUT` request.
+A separate broadcaster service was implemented to forward todo status messages via NATS to an external webhook endpoint.
 
-## What was implemented
-- Added a `done` field to todos
-- Implemented `PUT /todos/<id>` endpoint
-```bash
-app.put("/todos/:id", async (req, res) => {
-    const { id } = req.params;
+## Architecture
 
-    const result = await pool.query(
-        "UPDATE todos SET done = TRUE WHERE id = $1 RETURNING *",
-        [id]
-    );
-
-    if (result.rowCount === 0) {
-        return res.status(404).json({ error: "Todo not found" });
-    }
-
-    res.json(result.rows[0]);
-});
-```
-- Varified with curl
-```bash
-curl -X PUT http://localhost:8080/todos/1
-```
-- Updated backend logic to mark a todo as completed
-- Verified functionality using Kubernetes service and port-forwarding
+- todo-backend publishes events to NATS when todos are created/updated
+- broadcaster subscribes to NATS messages
+- broadcaster forwards messages to an external webhook service
+- broadcaster runs with 6 replicas without duplicate delivery
 
 ## Verification
-The screenshot below demonstrates:
-- Todo creation via `POST /todos`
-- Todo update via `PUT /todos/<id>`
-- Backend responding with `"done": true`
-- Application running correctly in Kubernetes
 
-![Exercise 4.5 proof](image/ex4.5.jpeg)
+1. Creating todos triggers NATS messages
+2. Broadcaster receives and forwards messages
+3. External webhook receives JSON payload
+4. Scaling broadcaster to 6 replicas does not create duplicates
+
+## Proof screenshots
+- On Terminal
+- ![Exercise 4.6.1 proof](image/ex4.6.1.jpeg)
+- ![Exercise 4.6.2 proof](image/ex4.6.2.jpeg)
+- ![Exercise 4.6.3 proof](image/ex4.6.3.jpeg)
+
+Exercise requirements satisfied.
+
 # End

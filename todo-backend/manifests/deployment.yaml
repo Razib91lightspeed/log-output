@@ -1,8 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: todo-backend-dep
-  namespace: project
+  name: todo-backend
 spec:
   replicas: 1
   selector:
@@ -15,15 +14,16 @@ spec:
     spec:
       containers:
         - name: todo-backend
-          image: razibhasan2/todo-backend:2.12
-          imagePullPolicy: Always
+          image: razibhasan2/todo-backend:amd64-publish
           ports:
             - containerPort: 3000
           env:
             - name: PORT
               value: "3000"
+
+            # --- Database ---
             - name: DB_HOST
-              value: todo-postgres
+              value: todo-postgres.project.svc.cluster.local
             - name: DB_NAME
               valueFrom:
                 secretKeyRef:
@@ -39,3 +39,7 @@ spec:
                 secretKeyRef:
                   name: todo-db-secret
                   key: DB_PASSWORD
+
+            # --- NATS (NEW, required for broadcaster) ---
+            - name: NATS_URL
+              value: "nats://my-nats:4222"

@@ -2,19 +2,17 @@ apiVersion: v1
 kind: Service
 metadata:
   name: todo-postgres
-  namespace: project
 spec:
   clusterIP: None
-  ports:
-    - port: 5432
   selector:
     app: todo-postgres
+  ports:
+    - port: 5432
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: todo-postgres
-  namespace: project
 spec:
   serviceName: todo-postgres
   replicas: 1
@@ -33,17 +31,8 @@ spec:
             - containerPort: 5432
           env:
             - name: POSTGRES_DB
-              valueFrom:
-                secretKeyRef:
-                  name: todo-db-secret
-                  key: DB_NAME
+              value: todos
             - name: POSTGRES_USER
-              valueFrom:
-                secretKeyRef:
-                  name: todo-db-secret
-                  key: DB_USER
+              value: todo
             - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: todo-db-secret
-                  key: DB_PASSWORD
+              value: todopass

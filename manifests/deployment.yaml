@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: log-output
-  namespace: project
 spec:
   replicas: 1
   selector:
@@ -13,11 +12,6 @@ spec:
       labels:
         app: log-output
     spec:
-      volumes:
-        - name: shared-storage
-          persistentVolumeClaim:
-            claimName: shared-pvc
-
       containers:
         - name: writer
           image: razibhasan2/log-writer:1.0.1
@@ -29,12 +23,7 @@ spec:
           image: razibhasan2/log-reader:1.16
           ports:
             - containerPort: 3000
-          volumeMounts:
-            - name: shared-storage
-              mountPath: /usr/src/app/shared
-          readinessProbe:
-            httpGet:
-              path: /ready
-              port: 3000
-            initialDelaySeconds: 5
-            periodSeconds: 5
+
+      volumes:
+        - name: shared-storage
+          emptyDir: {}
