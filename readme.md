@@ -17,7 +17,7 @@ A separate broadcaster service was implemented to forward todo status messages v
 4. Scaling broadcaster to 6 replicas does not create duplicates
 
 ## Proof screenshots
-- On Terminal
+
 - ![Exercise 4.6.1 proof](image/ex4.6.1.jpeg)
 - ![Exercise 4.6.2 proof](image/ex4.6.2.jpeg)
 - ![Exercise 4.6.3 proof](image/ex4.6.3.jpeg)
