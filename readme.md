@@ -1,27 +1,46 @@
-# Exercise 4.6 — Broadcaster Service
+# Exercise 4.7 – Baby steps to GitOps
 
-A separate broadcaster service was implemented to forward todo status messages via NATS to an external webhook endpoint.
+This exercise demonstrates moving the **log-output** application to a GitOps workflow using **ArgoCD**.
+The goal is to prove that when a commit is pushed to GitHub, ArgoCD automatically updates the application in Kubernetes.
 
-## Architecture
+---
 
-- todo-backend publishes events to NATS when todos are created/updated
-- broadcaster subscribes to NATS messages
-- broadcaster forwards messages to an external webhook service
-- broadcaster runs with 6 replicas without duplicate delivery
+## Steps performed
 
-## Verification
+1. Installed ArgoCD into the Kubernetes cluster.
+2. Created a new ArgoCD application pointing to the GitHub repository:
+   ```
+   https://github.com/Razib91lightspeed/log-output
+   ```
+3. Enabled **automatic sync** in ArgoCD.
+4. Pushed a new commit (`gitops proof`) to the repository.
+5. ArgoCD detected the new commit and automatically synchronized the cluster state.
 
-1. Creating todos triggers NATS messages
-2. Broadcaster receives and forwards messages
-3. External webhook receives JSON payload
-4. Scaling broadcaster to 6 replicas does not create duplicates
+This confirms GitOps is working: **Git is the source of truth**, and ArgoCD continuously reconciles the cluster with the repository.
 
-## Proof screenshots
+---
 
-- ![Exercise 4.6.1 proof](image/ex4.6.1.jpeg)
-- ![Exercise 4.6.2 proof](image/ex4.6.2.jpeg)
-- ![Exercise 4.6.3 proof](image/ex4.6.3.jpeg)
+## Proof
 
-Exercise requirements satisfied.
+### ArgoCD application synced automatically
+
+![ArgoCD GitOps proof](image/ex4.7.1.jpeg)
+
+### Commit pushed to repository
+
+![Git commit proof](image/ex4.7.2.jpeg)
+
+---
+
+## Result
+
+After pushing a commit:
+
+- ArgoCD automatically detected the change
+- Application status became **Healthy**
+- Sync status became **Synced**
+- New commit hash was deployed
+
+The cluster is now managed using GitOps.
 
 # End
