@@ -1,127 +1,126 @@
-
-# Exercise 5.4 – Wikipedia with Init Container and Sidecar
+# Exercise 5.6 – Trying Serverless with Knative
 
 ## Goal
 
-Create a Kubernetes Pod that serves Wikipedia pages using:
+Install **Knative Serving** on a local k3d cluster and verify:
 
-- Main container (nginx) → serves static files
-- Init container → downloads Kubernetes Wikipedia page before startup
-- Sidecar container → periodically fetches a random Wikipedia page and updates content
-
-This demonstrates how init containers prepare application state and how sidecars extend functionality at runtime.
-
----
-
-## Architecture
-
-Pod contains three containers:
-
-1. Init container
-   - Uses curl
-   - Downloads:
-     https://en.wikipedia.org/wiki/Kubernetes
-   - Saves to shared volume as `/data/index.html`
-   - Runs once before nginx starts
-
-2. Main container (nginx)
-   - Serves files from:
-     `/usr/share/nginx/html`
-   - Displays the downloaded Wikipedia page
-
-3. Sidecar container
-   - Sleeps randomly between 5–15 minutes
-   - Downloads:
-     https://en.wikipedia.org/wiki/Special:Random
-   - Overwrites `/data/index.html`
-   - Updates the page automatically
-
-All containers share the same `emptyDir` volume.
+- Knative installation works
+- A serverless service can be deployed
+- Autoscaling works
+- Traffic splitting between revisions works
 
 ---
 
-## Files
+## Cluster Setup
 
-- `manifests/wikipedia-pod.yaml` – Pod definition
+A new k3d cluster was created without Traefik (required by Knative):
 
- ![screenshot 3](image/ex.5.4.jpeg)
+```bash
+k3d cluster create knative \
+  --agents 2 \
+  -p 8091:80@loadbalancer \
+  -p 8092:30080@agent:0 \
+  --k3s-arg "--disable=traefik@server:0"
+```
+
+Switch context:
+
+```bash
+kubectl config use-context k3d-knative
+```
 
 ---
 
-## Deployment Steps
-
-Apply the pod:
+## Install Knative Serving
 
 ```bash
-kubectl apply -f manifests/wikipedia-pod.yaml
+kubectl apply -f serving-crds.yaml
+kubectl apply -f serving-core.yaml
+kubectl apply -f kourier.yaml
 ```
 
-Check pod status:
+Enable Magic DNS:
 
 ```bash
-kubectl get pods
+kubectl patch configmap/config-domain \
+  -n knative-serving \
+  --type merge \
+  -p '{"data":{"sslip.io":""}}'
 ```
 
-Expected:
+---
 
-```text
-wikipedia   2/2   Running
-```
+## Deploy Services
 
-Port forward:
+### Autoscaling service
 
 ```bash
-kubectl port-forward pod/wikipedia 8080:80
+kubectl apply -f knative/autoscale.yaml
 ```
 
-Open in browser:
+### Traffic split service
 
-```
-http://localhost:8080
+```bash
+kubectl apply -f knative/traffic-split.yaml
 ```
 
 ---
 
 ## Verification
 
-The following confirms correct behavior:
+### 1. Services created
 
-- Pod shows `2/2 Running`
-- Browser displays Kubernetes Wikipedia page
-- Content automatically changes over time (sidecar updates)
-- nginx serves files from shared volume
-
-Screenshot proof:
-
+```bash
+kubectl get ksvc
 ```
-image/ex.5.4.jpeg
-```
+
+Both services show `READY=True`.
 
 ---
 
-## Concepts Demonstrated
+### 2. Traffic splitting
 
-Init Containers:
-- Prepare environment before app starts
-- Download initial content
+Multiple requests were sent:
 
-Sidecar Containers:
-- Run alongside main app
-- Add extra functionality (periodic updates)
+```bash
+for i in {1..20}; do
+  curl -H "Host: hello-split.default.sslip.io" http://localhost:8091
+done
+```
 
-Shared Volume:
-- Enables file sharing between containers
+Output alternates between:
+
+```
+Hello Version ONE!
+Hello Version TWO!
+```
+
+This confirms:
+- two revisions running
+- requests distributed between versions
+- Knative traffic routing working
+
+---
+
+## Proof
+
+Screenshot shows:
+  - curl requests returning both versions
+  - `kubectl get ksvc`
+  - `kubectl get pods`
+
+  ![screenshot 4](image/ex5.7.jpeg)
 
 ---
 
 ## Result
 
-The pod successfully:
-- Downloads page before startup
-- Serves content with nginx
-- Periodically refreshes content
-- Demonstrates both init and sidecar patterns
+Knative Serving successfully installed and verified:
+- serverless deployment
+- autoscaling
+- traffic splitting
 
-Exercise 5.4 completed.
+Exercise completed successfully.
 
 # End
+
