@@ -1,46 +1,80 @@
-# Exercise 5.3 — Log app, the Service Mesh Edition
 
-This exercise integrates the **log-output application** with **Istio Ambient Service Mesh** and adds a new **greeter microservice**.
-Traffic is split between two greeter versions using **HTTPRoute weighted routing (75% / 25%)**.
+# Exercise 5.4 – Wikipedia with Init Container and Sidecar
 
----
+## Goal
 
-## Goals
+Create a Kubernetes Pod that serves Wikipedia pages using:
 
-- Deploy log-output inside Istio ambient mesh
-- Add greeter service
-- Log-output fetches greeting via HTTP
-- Deploy 2 versions of greeter (v1, v2)
-- Split traffic using HTTPRoute
-- Verify greeting + routing
+- Main container (nginx) → serves static files
+- Init container → downloads Kubernetes Wikipedia page before startup
+- Sidecar container → periodically fetches a random Wikipedia page and updates content
+
+This demonstrates how init containers prepare application state and how sidecars extend functionality at runtime.
 
 ---
 
 ## Architecture
 
-log-output → greeter-svc → (greeter-v1 | greeter-v2)
-HTTPRoute controls 75/25 split
+Pod contains three containers:
+
+1. Init container
+   - Uses curl
+   - Downloads:
+     https://en.wikipedia.org/wiki/Kubernetes
+   - Saves to shared volume as `/data/index.html`
+   - Runs once before nginx starts
+
+2. Main container (nginx)
+   - Serves files from:
+     `/usr/share/nginx/html`
+   - Displays the downloaded Wikipedia page
+
+3. Sidecar container
+   - Sleeps randomly between 5–15 minutes
+   - Downloads:
+     https://en.wikipedia.org/wiki/Special:Random
+   - Overwrites `/data/index.html`
+   - Updates the page automatically
+
+All containers share the same `emptyDir` volume.
+
+---
+
+## Files
+
+- `manifests/wikipedia-pod.yaml` – Pod definition
+- [screenshot 3](image/ex.5.4.jpeg)
 
 ---
 
 ## Deployment Steps
 
-### Enable ambient mesh
+Apply the pod:
+
 ```bash
-kubectl label namespace default istio.io/dataplane-mode=ambient
+kubectl apply -f manifests/wikipedia-pod.yaml
 ```
 
-### Apply manifests
+Check pod status:
+
 ```bash
-kubectl apply -f manifests/
+kubectl get pods
 ```
 
-### Port forward
-```bash
-kubectl port-forward svc/log-output-svc 8080:80
+Expected:
+
+```text
+wikipedia   2/2   Running
 ```
 
-### Open browser
+Port forward:
+
+```bash
+kubectl port-forward pod/wikipedia 8080:80
+```
+
+Open in browser:
+
 ```
 http://localhost:8080
 ```
@@ -49,60 +83,44 @@ http://localhost:8080
 
 ## Verification
 
-### 1. Greeter integration works
+The following confirms correct behavior:
 
-Browser output shows:
+- Pod shows `2/2 Running`
+- Browser displays Kubernetes Wikipedia page
+- Content automatically changes over time (sidecar updates)
+- nginx serves files from shared volume
+
+Screenshot proof:
 
 ```
-greetings: Hello, World!
-```
-
----
-
-### 2. Two greeter versions running
-
-```bash
-kubectl get pods | grep greeter
+image/ex.5.4.jpeg
 ```
 
 ---
 
-### 3. Traffic splitting configured
+## Concepts Demonstrated
 
-```bash
-kubectl describe httproute greeter
-```
+Init Containers:
+- Prepare environment before app starts
+- Download initial content
 
-Expected:
+Sidecar Containers:
+- Run alongside main app
+- Add extra functionality (periodic updates)
 
-```
-greeter-svc-v1 weight: 75
-greeter-svc-v2 weight: 25
-```
-
----
-
-## Proof Screenshots
-
-### Application + greeting visible
-![Proof 1](image/ex.5.3.1.jpeg)
-
-### Pods/services running
-![Proof 2](image/ex.5.3.2.jpeg)
-
-### HTTPRoute 75/25 traffic split
-![Proof 3](image/ex.5.3.3.jpeg)
+Shared Volume:
+- Enables file sharing between containers
 
 ---
 
 ## Result
 
-✔ Service mesh enabled
-✔ Greeter integrated
-✔ Two versions deployed
-✔ Traffic splitting working
-✔ Greeting visible in UI
+The pod successfully:
+- Downloads page before startup
+- Serves content with nginx
+- Periodically refreshes content
+- Demonstrates both init and sidecar patterns
 
-Exercise 5.3 completed successfully.
+Exercise 5.4 completed.
 
 # End

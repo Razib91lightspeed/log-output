@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: wikipedia
+  labels:
+    app: wikipedia
+
+spec:
+  # ⭐ ADD HERE (same level as containers/initContainers)
+  imagePullSecrets:
+    - name: regcred
+
+  volumes:
+    - name: html
+      emptyDir: {}
+
+  # -----------------
+  # INIT CONTAINER
+  # -----------------
+  initContainers:
+    - name: init-download
+      image: curlimages/curl:latest
+      command:
+        - sh
+        - -c
+        - |
+          echo "Downloading Kubernetes page..."
+          curl -L https://en.wikipedia.org/wiki/Kubernetes -o /data/index.html
+      volumeMounts:
+        - name: html
+          mountPath: /data
+
+  # -----------------
+  # MAIN + SIDECAR
+  # -----------------
+  containers:
+    - name: nginx
+      image: nginx:latest
+      ports:
+        - containerPort: 80
+      volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+
+    - name: sidecar-updater
+      image: curlimages/curl:latest
+      command:
+        - sh
+        - -c
+        - |
+          while true; do
+            sleep $((300 + RANDOM % 600))
+            echo "Fetching random page..."
+            curl -L https://en.wikipedia.org/wiki/Special:Random -o /data/index.html
+          done
+      volumeMounts:
+        - name: html
+          mountPath: /data
