@@ -43,7 +43,8 @@ All containers share the same `emptyDir` volume.
 ## Files
 
 - `manifests/wikipedia-pod.yaml` – Pod definition
-- [screenshot 3](image/ex.5.4.jpeg)
+
+- ![screenshot 3](image/ex.5.4.jpeg)
 
 ---
 
