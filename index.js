@@ -4,7 +4,15 @@ import fs from "fs";
 
 const app = express();
 
+/*
+  Knative requirement:
+  The app must listen on PORT environment variable.
+*/
+const PORT = process.env.PORT || 8080;
+
 const GREETER_URL = process.env.GREETER_URL || "http://greeter-svc";
+const MESSAGE = process.env.MESSAGE || "hello world";
+const SHARED_FILE = "/app/shared/file.txt";
 
 app.get("/", async (req, res) => {
   let greeting = "N/A";
@@ -16,23 +24,22 @@ app.get("/", async (req, res) => {
     greeting = "greeter unreachable";
   }
 
-  const message = process.env.MESSAGE || "hello world";
-  const fileContents = fs.existsSync("/app/shared/file.txt")
-    ? fs.readFileSync("/app/shared/file.txt", "utf-8")
+  const fileContents = fs.existsSync(SHARED_FILE)
+    ? fs.readFileSync(SHARED_FILE, "utf-8")
     : "no file";
 
   res.send(`
-    <pre>
+<pre>
 Ping / Pongs: OK
-env variable: MESSAGE=${message}
+env variable: MESSAGE=${MESSAGE}
 file contents: ${fileContents}
 greetings: ${greeting}
-    </pre>
-  `);
+</pre>
+`);
 });
 
-app.listen(3000, () => {
-  console.log("Log-output running on port 3000");
+app.listen(PORT, () => {
+  console.log(`Ping-pong running on port ${PORT}`);
 });
 
 

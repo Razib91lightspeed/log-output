@@ -1,131 +1,68 @@
-# Exercise 5.6 – Trying Serverless with Knative
+# Course Repository Structure
 
-## Goal
+This course project is organized into multiple folders, each connected to a separate Git repository.
 
-Install **Knative Serving** on a local k3d cluster and verify:
+When starting the course, each exercise or chapter was implemented independently and pushed to its own repository. Later I realized a single monorepo would have been cleaner, but the structure below reflects the historical development of the work.
 
-- Knative installation works
-- A serverless service can be deployed
-- Autoscaling works
-- Traffic splitting between revisions works
+Each folder is therefore an independent project with its own Git history.
 
----
+## Folder Overview
 
-## Cluster Setup
-
-A new k3d cluster was created without Traefik (required by Knative):
+### dummy-site-crd
+Contains Kubernetes CRD experiments and small test deployments used during early exercises for learning custom resources and basic manifests.
 
 ```bash
-k3d cluster create knative \
-  --agents 2 \
-  -p 8091:80@loadbalancer \
-  -p 8092:30080@agent:0 \
-  --k3s-arg "--disable=traefik@server:0"
+https://github.com/Razib91lightspeed/dummy-site-crd
 ```
 
-Switch context:
+### log-output
 
 ```bash
-kubectl config use-context k3d-knative
+https://github.com/Razib91lightspeed/log-output
 ```
+Main application repository.
+Includes:
+- Ping-pong service
+- Broadcaster
+- Greeter
+- Kubernetes manifests
+- Gateway / Ingress
+- Knative (serverless) exercises
 
----
+Most later course tasks and production-style deployments are implemented here.
 
-## Install Knative Serving
+### log-output-gitops
 
 ```bash
-kubectl apply -f serving-crds.yaml
-kubectl apply -f serving-core.yaml
-kubectl apply -f kourier.yaml
+https://github.com/Razib91lightspeed/log-output-gitops
 ```
 
-Enable Magic DNS:
+GitOps-focused exercises.
+Contains:
+- Declarative manifests
+- Environment overlays
+- Deployment automation experiments
+Used to practice GitOps workflows and infrastructure-as-code concepts.
+
+### todo-app
 
 ```bash
-kubectl patch configmap/config-domain \
-  -n knative-serving \
-  --type merge \
-  -p '{"data":{"sslip.io":""}}'
+https://github.com/Razib91lightspeed/todo-app
 ```
 
----
+Independent example application.
+Used for:
+- Dockerization
+- Kubernetes basics
+- Service exposure
+- Database integration
 
-## Deploy Services
+Serves as a simpler demo project separate from the main system.
 
-### Autoscaling service
+## Note
 
-```bash
-kubectl apply -f knative/autoscale.yaml
-```
+If starting again, I would combine everything into a single monorepo for simpler submission and organization. However, each repository remains fully functional and self-contained for clarity and modularity.
 
-### Traffic split service
+All exercises requested in the course are implemented within their respective folders.
 
-```bash
-kubectl apply -f knative/traffic-split.yaml
-```
-
----
-
-## Verification
-
-### 1. Services created
-
-```bash
-kubectl get ksvc
-```
-
-Both services show `READY=True`.
-
----
-
-### 2. Traffic splitting
-
-Multiple requests were sent:
-
-```bash
-for i in {1..20}; do
-  curl -H "Host: hello-split.default.sslip.io" http://localhost:8091
-done
-```
-
-Output alternates between:
-
-```
-Hello Version ONE!
-Hello Version TWO!
-```
-
-This confirms:
-- two revisions running
-- requests distributed between versions
-- Knative traffic routing working
-
----
-
-## Proof
-
-Screenshot shows:
-  - curl requests returning both versions
-
- ```bash
-  kubectl get ksvc
-  ```
- ```bash
- kubectl get pods -w
- ```
-
-  ![screenshot 4](image/ex5.7.jpeg)
-
----
-
-## Result
-
-Knative Serving successfully installed and verified:
-- serverless deployment
-- autoscaling
-- traffic splitting
-
-Exercise completed successfully.
-
-# End
-
+# ENd
