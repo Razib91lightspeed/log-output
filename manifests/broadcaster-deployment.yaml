@@ -7,20 +7,36 @@ spec:
   selector:
     matchLabels:
       app: broadcaster
+
   template:
     metadata:
       labels:
         app: broadcaster
+
     spec:
       containers:
-        - name: broadcaster
-          image: razibhasan2/broadcaster:latest
-          env:
-            - name: NATS_URL
-              value: nats://my-nats:4222
-            - name: WEBHOOK_URL
-              value: https://webhook.site/95067b9a-07e9-4ff8-b618-af318da2e5b3
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
+      - name: broadcaster
+        image: broadcaster:local
+        imagePullPolicy: IfNotPresent
+
+
+
+
+        ports:
+        - containerPort: 3000
+
+        env:
+        - name: NATS_URL
+          value: nats://my-nats:4222
+
+        - name: WEBHOOK_URL
+          value: https://webhook.site/95067b9a-07e9-4ff8-b618-af318da2e5b3
+
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+
+        # ⭐⭐ THIS IS REQUIRED FOR 5.3 ⭐⭐
+        - name: GREETER_URL
+          value: http://greeter-svc

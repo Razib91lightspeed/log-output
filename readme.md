@@ -1,46 +1,108 @@
-# Exercise 4.9 — GitOps environments
+# Exercise 5.3 — Log app, the Service Mesh Edition
 
-The project was enhanced to support GitOps deployment with two separate environments using ArgoCD and Kustomize.
+This exercise integrates the **log-output application** with **Istio Ambient Service Mesh** and adds a new **greeter microservice**.
+Traffic is split between two greeter versions using **HTTPRoute weighted routing (75% / 25%)**.
 
-## Environments
+---
 
-Two environments were created:
+## Goals
 
-- **staging** → namespace `staging`
-- **production** → namespace `production`
+- Deploy log-output inside Istio ambient mesh
+- Add greeter service
+- Log-output fetches greeting via HTTP
+- Deploy 2 versions of greeter (v1, v2)
+- Split traffic using HTTPRoute
+- Verify greeting + routing
 
-Each environment has its own overlay configuration based on a shared base.
+---
+
+## Architecture
+
+log-output → greeter-svc → (greeter-v1 | greeter-v2)
+HTTPRoute controls 75/25 split
+
+---
+
+## Deployment Steps
+
+### Enable ambient mesh
+```bash
+kubectl label namespace default istio.io/dataplane-mode=ambient
+```
+
+### Apply manifests
+```bash
+kubectl apply -f manifests/
+```
+
+### Port forward
+```bash
+kubectl port-forward svc/log-output-svc 8080:80
+```
+
+### Open browser
+```
+http://localhost:8080
+```
+
+---
+
+## Verification
+
+### 1. Greeter integration works
+
+Browser output shows:
 
 ```
-base/
-overlays/staging/
-overlays/production/
+greetings: Hello, World!
 ```
 
-## Deployment behavior
+---
 
-- Every commit to **main** automatically deploys to **staging**
-- Tagged commits deploy to **production**
-- ArgoCD continuously syncs cluster state from Git
+### 2. Two greeter versions running
 
-## Environment differences
+```bash
+kubectl get pods | grep greeter
+```
 
-**Staging**
-- Broadcaster logs messages only
-- No database backups
+---
 
-**Production**
-- Full system behavior enabled
+### 3. Traffic splitting configured
 
-## Proof
+```bash
+kubectl describe httproute greeter
+```
 
-ArgoCD showing both environments synced from Git:
+Expected:
 
-![staging + production](image/ex4.9.1.jpeg)
+```
+greeter-svc-v1 weight: 75
+greeter-svc-v2 weight: 25
+```
 
-Git commit automatically triggering deployment:
+---
 
-![gitops proof](image/ex4.9.2.jpeg)
+## Proof Screenshots
 
-The screenshots confirm successful GitOps deployment for both environments.
+### Application + greeting visible
+![Proof 1](image/ex.5.3.1.jpeg)
+
+### Pods/services running
+![Proof 2](image/ex.5.3.2.jpeg)
+
+### HTTPRoute 75/25 traffic split
+![Proof 3](image/ex.5.3.3.jpeg)
+
+---
+
+## Result
+
+✔ Service mesh enabled
+✔ Greeter integrated
+✔ Two versions deployed
+✔ Traffic splitting working
+✔ Greeting visible in UI
+
+Exercise 5.3 completed successfully.
+
 # End

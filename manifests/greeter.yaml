@@ -1,0 +1,98 @@
+# =====================================
+# Greeter v1 Deployment
+# =====================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: greeter-v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: greeter
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: greeter
+        version: v1
+    spec:
+      containers:
+      - name: greeter
+        image: mluukkai/hello:1
+        ports:
+        - containerPort: 8080
+
+---
+# =====================================
+# Greeter v2 Deployment
+# =====================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: greeter-v2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: greeter
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: greeter
+        version: v2
+    spec:
+      containers:
+      - name: greeter
+        image: mluukkai/hello:2
+        ports:
+        - containerPort: 8080
+
+---
+# =====================================
+# Service → v1
+# =====================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: greeter-svc-v1
+spec:
+  selector:
+    app: greeter
+    version: v1
+  ports:
+  - port: 80
+    targetPort: 8080
+
+---
+# =====================================
+# Service → v2
+# =====================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: greeter-svc-v2
+spec:
+  selector:
+    app: greeter
+    version: v2
+  ports:
+  - port: 80
+    targetPort: 8080
+
+---
+# =====================================
+# Parent Service (HTTPRoute target)
+# MUST match BOTH versions
+# =====================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: greeter-svc
+spec:
+  selector:
+    app: greeter
+  ports:
+  - port: 80
+    targetPort: 8080
