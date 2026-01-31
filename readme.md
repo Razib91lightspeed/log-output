@@ -106,8 +106,13 @@ This confirms:
 
 Screenshot shows:
   - curl requests returning both versions
-  - `kubectl get ksvc`
-  - `kubectl get pods`
+
+ ```bash
+  kubectl get ksvc
+  ```
+ ```bash
+ kubectl get pods
+ ```
 
   ![screenshot 4](image/ex5.7.jpeg)
 
