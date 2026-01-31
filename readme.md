@@ -111,7 +111,7 @@ Screenshot shows:
   kubectl get ksvc
   ```
  ```bash
- kubectl get pods
+ kubectl get pods -w
  ```
 
   ![screenshot 4](image/ex5.7.jpeg)
